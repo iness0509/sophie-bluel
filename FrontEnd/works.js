@@ -325,12 +325,13 @@ if (modal1) {
       return;
     }
 
-    // si l’API a bien supprimé, on enlève du DOM sans recharger (revoir la denomination)
-    const figure = btn.closest(".modal-thumb");
-    if (figure) figure.remove();
+    // 1) mettre à jour le tableau mémoire
+    const workId = Number(id);
+    allWorks = allWorks.filter((work) => work.id !== workId);
 
-    const mainFigure = document.querySelector(`.gallery figure[data-id="${id}"]`);
-    if (mainFigure) mainFigure.remove();
+    // 2) réafficher les galeries à partir de allWorks
+    renderGallery(allWorks);
+    renderModalGallery(allWorks);
   });
 }
 
@@ -388,7 +389,7 @@ console.log("submit déclenché");
 
    console.log("title:", title, "category:", category, "image:", image);
 
-  // 1) Message d’erreur si formulaire incomplet
+  // Message d’erreur si formulaire incomplet
   if (!title || !category || !image) {
     alert("Veuillez remplir tous les champs et choisir une image.");
     return;
@@ -409,18 +410,43 @@ console.log("submit déclenché");
       body: formData,
     });
 
-    // 2) Message selon la réponse de l’API
+    //  Message selon la réponse de l’API
     if (!res.ok) {
       alert("Erreur de l'API : " + res.status);
       return;
     }
+    const newWork = await res.json(); // { id, title, imageUrl, ... } [web:769]
+
+    // 1) mettre à jour le tableau mémoire
+    allWorks.push(newWork);
+      // 2) réafficher les galeries à partir de allWorks
+    renderGallery(allWorks);
+    renderModalGallery(allWorks);
+    
+    resetAddWorkForm();
+    modal2.classList.remove("is-open");
+    modal1.classList.remove("is-open");
 
     alert("Projet ajouté avec succès !");
+   
+    
   } catch (err) {
     alert("Erreur réseau, impossible de contacter l'API.");
   }
 });
 
 
+//Fonction pour nettoyer le formulaire + preview
+function resetAddWorkForm() {
+  formAddWork.reset();
 
+  // reset preview
+  previewImg.style.display = "none";
+  previewImg.src = "";
+  icon.style.display = "block";
+  uploadBtn.style.display = "inline-block";
+  text.style.display = "block";
+
+  submitButton.style.backgroundColor = "#A7A7A7";
+}
 

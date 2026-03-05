@@ -10,20 +10,44 @@ const filtersContainer = document.querySelector(".filters");
 
 // Stockage global des projets pour éviter de refaire fetch
 let allWorks = [];
+let allCategories = [];
 
 
 // Récupére les données des projets
 async function fetchWorks() {
-  const response = await fetch(API_WORKS);
-  const works = await response.json();
-  return works;
+  try {
+    const response = await fetch(API_WORKS);
+
+    if (!response.ok) {
+      throw new Error("Erreur API works");
+    }
+
+    return await response.json();
+
+  } catch (error) {
+    showPopup("Impossible de charger les projets", "error");
+    return [];
+  }
 }
 
 // Récupére les données des catégories
 async function fetchCategories() {
-  const response = await fetch(API_CATEGORIES);
-  const categories = await response.json();
-  return categories;
+  if (allCategories.length > 0) return allCategories;
+  try {
+    const response = await fetch(API_CATEGORIES);
+
+    if (!response.ok) {
+      throw new Error("Erreur API categories");
+    }
+
+    const categories = await response.json();
+    allCategories = categories; 
+    return categories;
+
+  } catch (error) {
+    showPopup("Impossible de charger les catégories", "error");
+    return [];
+  }
 }
 
 
@@ -48,7 +72,7 @@ function renderGallery(works) {
 }
 
 
-// Gestion du bouton actif
+// Gestion du bouton actif des filtres
 function setActiveButton(activeButton) {
   const buttons = document.querySelectorAll(".filter-btn");
 
@@ -73,14 +97,14 @@ function createFilterButton(label, categoryId) {
       renderGallery(allWorks);
     } else {
       const filteredWorks = allWorks.filter
-      ((work) => work.categoryId === categoryId
-      );
+        ((work) => work.categoryId === categoryId
+        );
       renderGallery(filteredWorks);
     }
   });
 
   return button;
-  
+
 }
 
 
@@ -101,20 +125,7 @@ function renderFilters(categories) {
 }
 
 
-// Initialisation
-async function init() {
-  const works = await fetchWorks();
-  const categories = await fetchCategories();
 
-  allWorks = works;
-
-  renderFilters(categories);
-  renderGallery(allWorks);
-
-  renderModalGallery(allWorks);
-}
-
-init();
 
 
 // GESTION des login/logout
@@ -124,12 +135,12 @@ const modeEditionBar = document.getElementById("mode-edition");
 const edit = document.querySelector(".edit");
 
 if (token && edit) {
-  edit.style.display="flex";
+  edit.style.display = "flex";
 }
 
 if (token && modeEditionBar) {
   // afficher la barre du mode edition 
-  modeEditionBar.style.display = "flex"; 
+  modeEditionBar.style.display = "flex";
   document.body.classList.add("admin-bar");
 }
 
@@ -148,14 +159,14 @@ if (authLink) {
       event.preventDefault();
       sessionStorage.removeItem("token");
       window.location.reload();
-      
+
     });
   } else {
     // Si non connecté
     authLink.textContent = "login";
     authLink.href = "login.html";
   }
-} 
+}
 
 
 // LES MODALES 
@@ -166,16 +177,16 @@ const modalGallery = document.querySelector(".modal-gallery");
 function renderModalGallery(works) {
   if (!modalGallery) return;
 
-  modalGallery.innerHTML = ""; 
+  modalGallery.innerHTML = "";
 
   works.forEach((work) => {
     const figure = document.createElement("figure");
     figure.classList.add("modal-thumb");
-    figure.dataset.id = work.id; // utile plus tard pour supprimer
+    figure.dataset.id = work.id; // utile pour supprimer
 
     const img = document.createElement("img");
-    img.src = work.imageUrl;     
-    img.alt = work.title;        
+    img.src = work.imageUrl;
+    img.alt = work.title;
 
     const deleteBtn = document.createElement("button");
     deleteBtn.classList.add("thumb-delete");
@@ -195,7 +206,7 @@ function renderModalGallery(works) {
 // gestions des clic
 const modal1 = document.getElementById("modal1");
 const modal2 = document.getElementById("modal2");
-const editBtn = document.querySelector(".edit");             
+const editBtn = document.querySelector(".edit");
 const addPhotoBtn = document.querySelector("#modal1 .modal-add-button");
 const backBtn = document.querySelector("#modal2 .modal-back");
 const closeBtns = document.querySelectorAll(".modal .modal-close");
@@ -213,7 +224,7 @@ if (addPhotoBtn && modal1 && modal2) {
   addPhotoBtn.addEventListener("click", () => {
     modal1.classList.remove("is-open");
     modal2.classList.add("is-open");
-   
+
   });
 }
 
@@ -222,18 +233,16 @@ if (backBtn && modal1 && modal2) {
   backBtn.addEventListener("click", () => {
     modal2.classList.remove("is-open");
     modal1.classList.add("is-open");
-  
+
   });
 }
 
 //  fermer la modale ouverte au clic sur la croix 
 closeBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
+    resetAddWorkForm(); // reset global
     const modal = btn.closest(".modal");
-    if (modal) {
-      modal.classList.remove("is-open");
-     
-    }
+    if (modal) modal.classList.remove("is-open");
   });
 });
 
@@ -241,11 +250,11 @@ closeBtns.forEach((btn) => {
 function closeModalOverlay(modal) {
   if (!modal) return;
   modal.classList.remove("is-open");
- 
+
 }
 if (modal1) {
   modal1.addEventListener("click", (e) => {
-    if (e.target === modal1) {     
+    if (e.target === modal1) {
       closeModalOverlay(modal1);
     }
   });
@@ -258,6 +267,21 @@ if (modal2) {
   });
 }
 
+// gestion des message d'alertes 
+
+function showPopup(message, type = "info") {
+  const popup = document.createElement("div");
+  popup.className = `popup ${type}`; // applique type et style
+  popup.textContent = message;
+
+  document.body.appendChild(popup);
+
+  // Disparaît après 5 secondes
+  setTimeout(() => {
+    if (popup.parentNode) popup.parentNode.removeChild(popup);
+  }, 5000);
+}
+
 // gestion de l'affichage de l'aperçu des nouvelles images
 const fileInput = document.getElementById("file");
 const previewImg = document.getElementById("preview-image");
@@ -266,47 +290,70 @@ const uploadBtn = document.querySelector("#modal2 .upload-button");
 const text = document.querySelector("#modal2 .upload-Photo p");
 
 if (fileInput && previewImg) {
+
+  // Fonction pour remettre l'état initial
+  function resetUploadState() {
+    previewImg.style.display = "none";
+    previewImg.src = "";
+    icon.style.display = "block";
+    uploadBtn.style.display = "inline-block";
+    text.style.display = "block";
+    fileInput.value = "";
+  }
+
+  //  Quand on sélectionne une image
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
     if (!file) return;
 
- // contrôle de la taille avant la preview
-  if (file.size > 4_000_000) { // ~4 Mo
-    alert("Image > 4 Mo, refusée");
-    fileInput.value = "";            // on vide le champ
-    // on remet l'état sans image
-    previewImg.style.display = "none";
-    icon.style.display = "block";
-    uploadBtn.style.display = "inline-block";
-    text.style.display = "block";
-    return;
-  }
- // si taille de la photo OK -> on affiche l’aperçu
+    //  Contrôle taille 4Mo max 
+    if (file.size > 4_000_000) {
+      showPopup("Image > 4 Mo, refusée", "error");
+      resetUploadState();
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = (e) => {
-    previewImg.src = e.target.result;  
-    previewImg.style.display = "block";
-    icon.style.display = "none";
-    uploadBtn.style.display = "none";
-    text.style.display = "none";
+      previewImg.src = e.target.result;
+      previewImg.style.display = "block";
+
+      icon.style.display = "none";
+      uploadBtn.style.display = "none";
+      text.style.display = "none";
     };
 
-    reader.readAsDataURL(file); 
+    reader.readAsDataURL(file);
   });
+
+  // Quand on clique sur l’image : suppression
+  previewImg.addEventListener("click", () => {
+    resetUploadState();
+  });
+
 }
 
-// gestion de la suppression des photos 
-async function deleteWork(id, token) {
-  const response = await fetch(`http://localhost:5678/api/works/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    },
-  });
+// gestion de la suppression des images 
+async function deleteWork(id) {
+  try {
+    const response = await fetch(`${API_WORKS}/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  // true si la suppression a bien fonctionné (200, 204, etc.) [web:518][web:603]
-  return response.ok;
+    if (!response.ok) {
+      throw new Error("Erreur suppression");
+    }
+
+    return true;
+
+  } catch (error) {
+    showPopup("Erreur lors de la suppression", "error");
+    return false;
+  }
 }
 
 if (modal1) {
@@ -317,42 +364,39 @@ if (modal1) {
     const id = btn.dataset.id;
     if (!id) return;
 
-    if (!confirm("Supprimer ce travail ?")) return;
-
     const ok = await deleteWork(id, token);
-    if (!ok) {
-      alert("Suppression impossible");
-      return;
-    }
+    if (!ok) return;
+  
 
-    // 1) mettre à jour le tableau mémoire
+    // mettre à jour le tableau mémoire
     const workId = Number(id);
     allWorks = allWorks.filter((work) => work.id !== workId);
 
-    // 2) réafficher les galeries à partir de allWorks
+    // réafficher les galeries à partir de allWorks
     renderGallery(allWorks);
     renderModalGallery(allWorks);
+
+    // fermer la modale après suppression
+    modal1.classList.remove("is-open");
+
+    // afficher un message succès
+    showPopup("Projet supprimé avec succès", "success");
   });
 }
 
 //récupération des catégories via l'api 
 const categorySelect = document.getElementById("categoryInput");
 
-async function loadCategory() {
-  const res = await fetch("http://localhost:5678/api/categories");
-  const categories = await res.json(); // tableau { id, name, ... } [web:616]
-
+function renderCategorySelect(categories) {
   categorySelect.innerHTML = "";
-
-  categories.forEach((cat) => {
+  categories.forEach(cat => {
     const option = document.createElement("option");
     option.value = cat.id;
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
+  categorySelect.selectedIndex = -1;
 }
-
-loadCategory();
 
 
 //gestion de la validation des champs avec le bouton vert
@@ -376,22 +420,19 @@ categorySelect.addEventListener("change", checkForm);
 fileInput.addEventListener("change", checkForm);
 
 
-//gestion des ajouts photos 
+// gestion des ajouts photos 
 const formAddWork = document.getElementById("formAddWork");
-console.log("formAddWork =", formAddWork);
+
 formAddWork.addEventListener("submit", async (e) => {
   e.preventDefault();
-console.log("submit déclenché");
 
   const title = titleInput.value.trim();
   const category = categorySelect.value;
   const image = fileInput.files[0];
 
-   console.log("title:", title, "category:", category, "image:", image);
-
   // Message d’erreur si formulaire incomplet
   if (!title || !category || !image) {
-    alert("Veuillez remplir tous les champs et choisir une image.");
+    showPopup("Veuillez remplir tous les champs", "info");
     return;
   }
 
@@ -402,7 +443,7 @@ console.log("submit déclenché");
   formData.append("image", image);
 
   try {
-    const res = await fetch("http://localhost:5678/api/works", {
+    const res = await fetch(API_WORKS, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -412,26 +453,26 @@ console.log("submit déclenché");
 
     //  Message selon la réponse de l’API
     if (!res.ok) {
-      alert("Erreur de l'API : " + res.status);
+      showPopup("Erreur lors de l'ajout", "error");
       return;
     }
-    const newWork = await res.json(); // { id, title, imageUrl, ... } [web:769]
+    const newWork = await res.json();
 
-    // 1) mettre à jour le tableau mémoire
+    //  mettre à jour le tableau mémoire
     allWorks.push(newWork);
-      // 2) réafficher les galeries à partir de allWorks
+    //  réafficher les galeries à partir de allWorks
     renderGallery(allWorks);
     renderModalGallery(allWorks);
-    
+
     resetAddWorkForm();
     modal2.classList.remove("is-open");
     modal1.classList.remove("is-open");
 
-    alert("Projet ajouté avec succès !");
-   
-    
+    showPopup("Projet ajouté avec succès !", "success");
+
+
   } catch (err) {
-    alert("Erreur réseau, impossible de contacter l'API.");
+    showPopup("Erreur réseau, impossible de contacter l'API.", "error");
   }
 });
 
@@ -450,3 +491,18 @@ function resetAddWorkForm() {
   submitButton.style.backgroundColor = "#A7A7A7";
 }
 
+// Initialisation
+async function init() {
+  const works = await fetchWorks();
+  const categories = await fetchCategories();
+
+  allWorks = works;
+
+  renderFilters(categories);
+  renderGallery(allWorks);
+
+  renderModalGallery(allWorks);
+  renderCategorySelect(categories);
+}
+
+init();

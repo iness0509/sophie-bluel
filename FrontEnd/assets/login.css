@@ -19,6 +19,11 @@ main{
 	text-align: center;
 
 }
+
+nav a.active {
+  font-weight: bold;
+}
+
 #login h2{
 	margin-bottom: 20px;
 }
@@ -55,7 +60,5 @@ main{
 	
 }
 
-.error {
-  display: none;
-  color: crimson;
-}
+
+

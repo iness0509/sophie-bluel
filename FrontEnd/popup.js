@@ -8,7 +8,7 @@ function showPopup(message, type = "info") {
   document.body.appendChild(popup);
 
   // Disparaît après 5 secondes
-  setTimeout(() => {
-    if (popup.parentNode) popup.parentNode.removeChild(popup);
+   setTimeout(() => {
+    popup.remove();
   }, 5000);
 }

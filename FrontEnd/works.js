@@ -182,7 +182,7 @@ function renderModalGallery(works) {
   works.forEach((work) => {
     const figure = document.createElement("figure");
     figure.classList.add("modal-thumb");
-    figure.dataset.id = work.id; // utile pour supprimer
+    figure.dataset.id = work.id; 
 
     const img = document.createElement("img");
     img.src = work.imageUrl;
@@ -190,7 +190,7 @@ function renderModalGallery(works) {
 
     const deleteBtn = document.createElement("button");
     deleteBtn.classList.add("thumb-delete");
-    deleteBtn.dataset.id = work.id; // indispensable pour le DELETE API
+    deleteBtn.dataset.id = work.id; 
 
 
     const trashIcon = document.createElement("i");
@@ -240,7 +240,7 @@ if (backBtn && modal1 && modal2) {
 //  fermer la modale ouverte au clic sur la croix 
 closeBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
-    resetAddWorkForm(); // reset global
+    resetAddWorkForm(); 
     const modal = btn.closest(".modal");
     if (modal) modal.classList.remove("is-open");
   });

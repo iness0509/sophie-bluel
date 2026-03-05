@@ -125,9 +125,6 @@ function renderFilters(categories) {
 }
 
 
-
-
-
 // GESTION des login/logout
 const authLink = document.getElementById("auth");
 const token = sessionStorage.getItem("token");

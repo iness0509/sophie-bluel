@@ -1,7 +1,8 @@
 
+// Messages d'alerte 
 function showPopup(message, type = "info") {
   const popup = document.createElement("div");
-  popup.className = `popup ${type}`; // applique type et style
+  popup.className = `popup ${type}`; 
   popup.textContent = message;
 
   document.body.appendChild(popup);
